@@ -45,7 +45,8 @@ pipeline {
                 echo 'Deploying application...'
                 sh 'docker stop spring-app-test || true'
                 sh 'docker rm spring-app-test || true'
-                sh "docker run -d --name spring-app-test -p 8082:8082 ${APP_NAME}:${IMAGE_TAG}"
+                // Map host port 8082 -> container application port 8080
+                sh "docker run -d --name spring-app-test -p 8082:8080 ${APP_NAME}:${IMAGE_TAG}"
                 sleep 15
             }
         }
@@ -56,7 +57,7 @@ pipeline {
                 sh """
                   docker run --rm \
                   --network="host" \
-                  -v \$(pwd)/postman:/etc/newman \
+                  -v "${WORKSPACE}/postman:/etc/newman" \
                   postman/newman \
                   run /etc/newman/spring-app-tests.json \
                   -e /etc/newman/environment.json
