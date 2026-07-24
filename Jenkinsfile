@@ -45,7 +45,7 @@ pipeline {
                 echo 'Deploying application...'
                 sh 'docker stop spring-app-test || true'
                 sh 'docker rm spring-app-test || true'
-                sh "docker run -d --name spring-app-test -p 8080:8080 ${APP_NAME}:${IMAGE_TAG}"
+                sh "docker run -d --name spring-app-test -p 8082:8082 ${APP_NAME}:${IMAGE_TAG}"
                 sleep 15
             }
         }
