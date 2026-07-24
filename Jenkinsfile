@@ -27,9 +27,7 @@ pipeline {
         stage('3. SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar \
-                        -Dsonar.projectKey=spring-boot-app \
-                        -Dsonar.java.binaries=target/classes'
+                    sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=spring-boot-app -Dsonar.java.binaries=target/classes'
                 }
             }
         }
