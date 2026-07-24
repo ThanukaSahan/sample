@@ -4,27 +4,24 @@ pipeline {
     environment {
         APP_NAME = 'spring-boot-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
-        POSTMAN_ENV = 'postman/environment.json'
-        POSTMAN_COLL = 'postman/spring-app-tests.json'
     }
 
     stages {
         stage('1. Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-user/your-repo.git'
+                checkout scm
             }
         }
 
         stage('2. Build & Unit Tests') {
             steps {
-                echo 'Building Spring Boot JAR and executing unit tests...'
+                echo 'Building Spring Boot JAR and running tests...'
                 sh './mvnw clean test'
             }
         }
 
         stage('3. SonarQube Analysis') {
             steps {
-                // Requires "SonarQube Scanner" plugin installed in Jenkins
                 withSonarQubeEnv('SonarQube') {
                     sh './mvnw sonar:sonar \
                         -Dsonar.projectKey=spring-boot-app \
@@ -35,7 +32,7 @@ pipeline {
 
         stage('4. Build Docker Image') {
             steps {
-                echo 'Building Docker container image...'
+                echo 'Building Docker image...'
                 sh "docker build -t ${APP_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${APP_NAME}:${IMAGE_TAG} ${APP_NAME}:latest"
             }
@@ -43,22 +40,17 @@ pipeline {
 
         stage('5. Deploy Container for Testing') {
             steps {
-                echo 'Deploying application container...'
-                // Stop & remove existing container if running
+                echo 'Deploying application...'
                 sh 'docker stop spring-app-test || true'
                 sh 'docker rm spring-app-test || true'
-                // Run new container on port 8080
                 sh "docker run -d --name spring-app-test -p 8080:8080 ${APP_NAME}:${IMAGE_TAG}"
-                
-                // Give Spring Boot a few seconds to boot up completely
                 sleep 15
             }
         }
 
         stage('6. Run Postman Integration Tests') {
             steps {
-                echo 'Executing API Tests via Postman (Newman)...'
-                // Uses the official Postman Newman Docker image to run tests against the app
+                echo 'Executing Postman tests with Newman...'
                 sh """
                   docker run --rm \
                   --network="host" \
@@ -73,14 +65,14 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up old images...'
-            sh 'docker image prune -f'
+            echo 'Cleaning up dangling images...'
+            sh 'docker image prune -f || true'
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Please inspect logs.'
+            echo 'Pipeline failed. Please check the logs above.'
         }
     }
 }
