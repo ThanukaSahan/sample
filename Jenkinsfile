@@ -6,6 +6,10 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
+    tools {
+        maven 'Maven3' // Ensures 'mvn' command is available across all stages
+    }
+
     stages {
         stage('1. Checkout Code') {
             steps {
@@ -16,14 +20,14 @@ pipeline {
         stage('2. Build & Unit Tests') {
             steps {
                 echo 'Building Spring Boot JAR and running tests...'
-                sh './mvnw clean test'
+                sh 'mvn clean test'
             }
         }
 
         stage('3. SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh './mvnw sonar:sonar \
+                    sh 'mvn sonar:sonar \
                         -Dsonar.projectKey=spring-boot-app \
                         -Dsonar.java.binaries=target/classes'
                 }
